@@ -1,0 +1,303 @@
+<CompuCell3D Revision="20190906" Version="4.1.0">
+   
+   <Metadata>
+   
+      <!-- Basic properties simulation -->
+      <NumberOfProcessors>1</NumberOfProcessors>
+      <DebugOutputFrequency>10</DebugOutputFrequency>
+      <!-- <NonParallelModule Name="Potts"/> -->
+      
+   </Metadata>
+   
+   <Potts>
+      
+      <!-- Basic properties of CPM (GGH) algorithm -->
+      <Dimensions x="100" y="100" z="1"/>
+      <Steps>2000</Steps> 
+      <Temperature>10.0</Temperature>
+      <NeighborOrder>1</NeighborOrder>
+      
+      <!--Uncomment the following two lines to allow for periodic boundary conditions-->
+      <!-- <Boundary_x>Periodic</Boundary_x> -->
+      <!--<Boundary_y>Periodic</Boundary_y> -->
+      
+   </Potts>
+   
+   <Plugin Name="CellType">
+      
+      <!-- Listing all cell types in the simulation -->
+      <CellType Freeze="" TypeId="0" TypeName="Medium"/>
+      <CellType TypeId="1" TypeName="Leader"/>
+      <CellType TypeId="2" TypeName="Follower"/>
+      <CellType TypeId="3" TypeName="Intermediate"/>
+      <CellType Freeze="" TypeId="4" TypeName="Source"/>
+      <CellType Freeze="" TypeId="5" TypeName="Wall"/> <!--VegF from enviornment -->
+   </Plugin>
+   
+   <Plugin Name="VolumeLocalFlex">
+   
+   </Plugin>
+   
+   <Plugin Name="ExternalPotential">
+      
+      <!-- External force applied to cell. Each cell type has different force. -->
+      <!-- For more flexible specification of the constraint (done in Python) please use ExternalPotentialLocalFlex plugin -->
+      <!-- Algorithm options are: PixelBased, CenterOfMassBased -->
+      <Algorithm>PixelBased</Algorithm>
+      <ExternalPotentialParameters CellType="Leader" x="0" y="0" z="0.0"/>
+      <ExternalPotentialParameters CellType="Follower" x="0" y="0" z="0.0"/>
+      <ExternalPotentialParameters CellType="Intermediate" x="0" y="0" z="0.0"/>
+   </Plugin>
+   
+   <Plugin Name="CenterOfMass">
+      <!-- Module tracking center of mass of each cell -->
+   </Plugin>
+   
+   <Plugin Name="Contact">
+      <!-- Specification of adhesion energies -->
+      <Energy Type1="Medium" Type2="Medium">10.0</Energy>
+      <Energy Type1="Medium" Type2="Leader">14.0</Energy>
+      <Energy Type1="Medium" Type2="Follower">10.0</Energy>
+      <Energy Type1="Medium" Type2="Intermediate">13.0</Energy>
+      <Energy Type1="Leader" Type2="Leader">100.0</Energy>
+      <Energy Type1="Leader" Type2="Follower">3.0</Energy>
+      <Energy Type1="Leader" Type2="Intermediate">2.0</Energy>
+      <Energy Type1="Follower" Type2="Follower">1.0</Energy>
+      <Energy Type1="Follower" Type2="Intermediate">5.0</Energy>
+      <Energy Type1="Intermediate" Type2="Intermediate">9.0</Energy>
+      <NeighborOrder>1</NeighborOrder>
+   </Plugin>
+   
+   <Plugin Name="Chemotaxis">
+      
+      <!-- You may repeat ChemicalField element for each chemical field declared in the PDE solvers -->
+      <!-- Specification of chemotaxis properties of select cell types. -->
+      <ChemicalField Name="MigC" Source="DiffusionSolverFE">
+         <ChemotaxisByType Lambda="-5000" Type="Leader"/> <!-- PARAM Change chemotaxis strength -->
+      </ChemicalField>
+   </Plugin>
+   
+   <Plugin Name="LengthConstraint">
+      <LengthEnergyParameters CellType="Follower" LambdaLength="2.0" TargetLength="25"/>
+      <LengthEnergyParameters CellType="Leader" LambdaLength="2.0" TargetLength="10"/>
+      <LengthEnergyParameters CellType="Source" LambdaLength="2.0" TargetLength="25"/>
+   </Plugin>
+   
+   
+   <Plugin Name="ConnectivityGlobal">
+        <FastAlgorithm/>
+    </Plugin>
+  
+  
+<!--  <Plugin Name="FocalPointPlasticity"> -->
+<!--    <Local/> --> <!-- This switches on local calculations and allows all parameters to be modified individually (using Python) on cell by cell basis -->
+              <!-- If you do not include this tag parameters will be set on type by type basis -->
+              
+     <!-- Note that even though you may manipulate lambdaDistance, targetDistance and maxDistance using Python you still need to set activation energy from XML level-->              
+<!--  <Parameters Type1="Leader" Type2="Leader">
+       <Lambda>10.0</Lambda>
+       <ActivationEnergy>-50.0</ActivationEnergy>       
+       <TargetDistance>7</TargetDistance>
+       <MaxDistance>1.0</MaxDistance>
+       <MaxNumberOfJunctions NeighborOrder="1">1</MaxNumberOfJunctions>       
+    </Parameters>  
+
+    <Parameters Type1="Follower" Type2="Follower">
+       <Lambda>10.0</Lambda>       
+       <ActivationEnergy>-50.0</ActivationEnergy>       
+       <TargetDistance>7</TargetDistance>
+       <MaxDistance>20000.0</MaxDistance>
+       <MaxNumberOfJunctions NeighborOrder="1">10000000</MaxNumberOfJunctions>              
+    </Parameters>
+ 
+    <InternalParameters Type1="Leader" Type2="Intermediate">
+       <Lambda>11.0</Lambda>
+       <ActivationEnergy>-50.0</ActivationEnergy>       
+       <TargetDistance>7</TargetDistance>
+       <MaxDistance>20.0</MaxDistance>
+       <MaxNumberOfJunctions>5</MaxNumberOfJunctions>        
+    </InternalParameters> 
+
+    <InternalParameters Type1="Follower" Type2="Leader">
+       <Lambda>11.0</Lambda>
+       <ActivationEnergy>-50.0</ActivationEnergy>       
+       <TargetDistance>50</TargetDistance>
+       <MaxDistance>200.0</MaxDistance>       
+       <MaxNumberOfJunctions>1000</MaxNumberOfJunctions>
+    </InternalParameters> 
+    
+    <NeighborOrder>1</NeighborOrder>
+    
+ </Plugin> 
+--> 
+   <Steppable Type="DiffusionSolverFE">
+      
+      <!-- Specification of PDE solvers -->
+      <DiffusionField Name="MigC">
+         <DiffusionData>
+            <FieldName>MigC</FieldName>
+            <GlobalDiffusionConstant>14.28</GlobalDiffusionConstant>
+            <GlobalDecayConstant>0.001428</GlobalDecayConstant>
+            <DiffusionCoefficient CellType="Follower">14.28</DiffusionCoefficient>
+            <DiffusionCoefficient CellType="Leader">14.28</DiffusionCoefficient>
+            <DiffusionCoefficient CellType="Source">14.28</DiffusionCoefficient>
+            <DecayCoefficient CellType="Follower">0.001428</DecayCoefficient>
+            <DecayCoefficient CellType="Leader">0.001428</DecayCoefficient>
+            <DecayCoefficient CellType="Source">0.001428</DecayCoefficient>
+         </DiffusionData>
+         <SecretionData>
+            <!-- When secretion is defined inside DissufionSolverFEall secretion constants are saled automaticly to account for extra calls of the solver when handling large diffusion constants -->
+            <Secretion Type="Source">12.997 </Secretion> <!-- PARAM Change Leader secretion -->
+         </SecretionData>
+         <BoundaryConditions>
+            <Plane Axis="X">
+               <ConstantDerivative PlanePosition="Min" Value="0"/>
+               <ConstantDerivative PlanePosition="Max" Value="0"/>
+            </Plane>
+            <Plane Axis="Y">
+               <ConstantDerivative PlanePosition="Min" Value="0"/>
+               <ConstantDerivative PlanePosition="Max" Value="0"/>
+            </Plane>
+         </BoundaryConditions>
+      </DiffusionField>
+      
+      <DiffusionField Name="LC">
+        <DiffusionData>
+           <FieldName>LC</FieldName>
+           <GlobalDiffusionConstant>0.8</GlobalDiffusionConstant>
+           <GlobalDecayConstant>0.08</GlobalDecayConstant>
+           <!-- Additional options are: -->
+           <!-- <InitialConcentrationExpression>x*y</InitialConcentrationExpression> -->
+           <!-- <ConcentrationFileName>INITIAL CONCENTRATION FIELD - typically a file with path Simulation/NAME_OF_THE_FILE.txt</ConcentrationFileName> -->
+           <DiffusionCoefficient CellType="Leader">0.8</DiffusionCoefficient>
+           <DiffusionCoefficient CellType="Follower">0.8</DiffusionCoefficient>
+           <DiffusionCoefficient CellType="Source">0.8</DiffusionCoefficient>
+           <DecayCoefficient CellType="Leader">0.08</DecayCoefficient>
+           <DecayCoefficient CellType="Follower">0.08</DecayCoefficient>
+           <DecayCoefficient CellType="Source">0.08</DecayCoefficient>
+        </DiffusionData>
+        <SecretionData>
+           <Secretion Type="Leader">0.034</Secretion>
+           <Secretion Type="Follower">0.014</Secretion>
+           <Secretion Type="Intermediate">0.024</Secretion>
+        </SecretionData>
+        <BoundaryConditions>
+           <Plane Axis="X">
+               <ConstantDerivative PlanePosition="Min" Value="0"/>
+               <ConstantDerivative PlanePosition="Max" Value="0"/>
+           </Plane>
+           <Plane Axis="Y">
+               <ConstantDerivative PlanePosition="Min" Value="0"/>
+               <ConstantDerivative PlanePosition="Max" Value="0"/>
+           </Plane>
+        </BoundaryConditions>
+      </DiffusionField>
+      
+      
+     <ChemicalField Name="ATTR">  
+            <!--     <ChemotaxisByType Type="Macrophage" Lambda="20"/>   	  -->
+        </ChemicalField>
+      
+      
+      <DiffusionField>
+            <DiffusionData>
+                <FieldName>ATTR</FieldName>
+                <DiffusionConstant>0.10</DiffusionConstant>
+                <DecayConstant>0.000</DecayConstant>
+                <DiffusionCoefficient CellType="Wall">1.0</DiffusionCoefficient>
+            </DiffusionData>
+            <SecretionData>
+                <Secretion Type="Wall">.01</Secretion>
+            </SecretionData>
+      </DiffusionField>
+      
+   </Steppable>
+       
+      
+   <Steppable Type="BlobInitializer">
+      
+      
+      <Region>
+         <Center x="50" y="50" z="0"/>
+         <Radius>22</Radius>
+         <Gap>0</Gap>
+         <Width>5</Width>
+         <Types>Follower</Types>
+      </Region>
+      
+      <Region>
+        <Center x="50" y="40" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Leader</Types>
+      </Region>
+      
+      <Region>
+        <Center x="50" y="75" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Leader</Types>
+      </Region>
+      
+      <Region>
+        <Center x="75" y="50" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Leader</Types>
+      </Region>
+      
+      <Region>
+        <Center x="60" y="50" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Leader</Types>
+      </Region>
+     
+      <Region>
+        <Center x="48" y="38" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Intermediate</Types>
+      </Region>
+      
+      <Region>
+        <Center x="48" y="65" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Intermediate</Types>
+      </Region>
+      
+      <Region>
+        <Center x="58" y="48" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Intermediate</Types>
+      </Region>
+      
+      <Region>
+        <Center x="52" y="48" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Intermediate</Types>
+      </Region>
+     
+       <Region>
+        <Center x="50" y="50" z="0"/>
+         <Radius>1</Radius>
+         <Gap>0</Gap>
+         <Width>1</Width>
+         <Types>Source</Types>
+      </Region>
+      
+   </Steppable>
+
+
+</CompuCell3D>
